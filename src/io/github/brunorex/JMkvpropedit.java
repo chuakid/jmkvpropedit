@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Bruno Barbieri
+ * Copyright (c) 2012-2018 Bruno Barbieri
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -44,8 +44,8 @@ import org.ini4j.*;
 
 public class JMkvpropedit {
 
-    private static final String VERSION_NUMBER = "1.3.3.1";
-    private static final int MAX_STREAMS = 30;
+    private static final String VERSION_NUMBER = "1.4.3";
+    private static final int MAX_STREAMS = 100;
     private static String[] argsArray;
 
     private Process proc = null;
@@ -175,6 +175,7 @@ public class JMkvpropedit {
     private DefaultListModel<String> modelFiles;
     private JList<String> listFiles;
     private JButton btnAddFiles;
+    private JButton btnAddFolder;
     private JButton btnRemoveFiles;
     private JButton btnTopFiles;
     private JButton btnUpFiles;
@@ -204,8 +205,6 @@ public class JMkvpropedit {
     private JComboBox<String> cbExtTags;
     private JCheckBox chbExtraCmdGeneral;
     private JTextField txtExtraCmdGeneral;
-    private JTextField txtMkvPropExe;
-    private JCheckBox chbMkvPropExeDef;
 
 
     // Video tab controls
@@ -375,6 +374,12 @@ public class JMkvpropedit {
     private JButton btnAttachDeleteCancel;
 
 
+    // Option tab controls
+    private JPanel pnlOptions;
+    private JTextField txtMkvPropExe;
+    private JCheckBox chbMkvPropExeDef;
+
+
     // Output tab controls
     private JTextArea txtOutput;
 
@@ -446,10 +451,24 @@ public class JMkvpropedit {
         btnAddFiles.setContentAreaFilled(false);
         btnAddFiles.setFocusPainted(false);
         btnAddFiles.setOpaque(false);
+        btnAddFiles.setToolTipText("Add files");
         pnlListToolbar.add(btnAddFiles);
 
         Component verticalStrut1 = Box.createVerticalStrut(10);
         pnlListToolbar.add(verticalStrut1);
+
+        btnAddFolder = new JButton("");
+        btnAddFolder.setIcon(new ImageIcon(JMkvpropedit.class.getResource("/res/list-add-folder.png")));
+        btnAddFolder.setMargin(new Insets(0, 0, 0, 0));
+        btnAddFolder.setBorderPainted(false);
+        btnAddFolder.setContentAreaFilled(false);
+        btnAddFolder.setFocusPainted(false);
+        btnAddFolder.setOpaque(false);
+        btnAddFolder.setToolTipText("Add folder");
+        pnlListToolbar.add(btnAddFolder);
+
+        Component verticalStrut1b = Box.createVerticalStrut(10);
+        pnlListToolbar.add(verticalStrut1b);
 
         btnRemoveFiles = new JButton("");
         btnRemoveFiles.setIcon(new ImageIcon(JMkvpropedit.class.getResource("/res/list-remove.png")));
@@ -458,6 +477,7 @@ public class JMkvpropedit {
         btnRemoveFiles.setContentAreaFilled(false);
         btnRemoveFiles.setFocusPainted(false);
         btnRemoveFiles.setOpaque(false);
+        btnRemoveFiles.setToolTipText("Remove selected files");
         pnlListToolbar.add(btnRemoveFiles);
 
         Component verticalStrut2 = Box.createVerticalStrut(10);
@@ -470,6 +490,7 @@ public class JMkvpropedit {
         btnTopFiles.setContentAreaFilled(false);
         btnTopFiles.setFocusPainted(false);
         btnTopFiles.setOpaque(false);
+        btnTopFiles.setToolTipText("Move selected files to the top");
         pnlListToolbar.add(btnTopFiles);
 
         Component verticalStrut3 = Box.createVerticalStrut(10);
@@ -482,6 +503,7 @@ public class JMkvpropedit {
         btnUpFiles.setContentAreaFilled(false);
         btnUpFiles.setFocusPainted(false);
         btnUpFiles.setOpaque(false);
+        btnUpFiles.setToolTipText("Move selected files up");
         pnlListToolbar.add(btnUpFiles);
 
         Component verticalStrut4 = Box.createVerticalStrut(10);
@@ -494,6 +516,7 @@ public class JMkvpropedit {
         btnDownFiles.setContentAreaFilled(false);
         btnDownFiles.setFocusPainted(false);
         btnDownFiles.setOpaque(false);
+        btnDownFiles.setToolTipText("Move selected files down");
         pnlListToolbar.add(btnDownFiles);
 
         Component verticalStrut5 = Box.createVerticalStrut(10);
@@ -506,6 +529,7 @@ public class JMkvpropedit {
         btnBottomFiles.setContentAreaFilled(false);
         btnBottomFiles.setFocusPainted(false);
         btnBottomFiles.setOpaque(false);
+        btnBottomFiles.setToolTipText("Move selected files to the bottom");
         pnlListToolbar.add(btnBottomFiles);
 
         Component verticalStrut6 = Box.createVerticalStrut(10);
@@ -518,6 +542,7 @@ public class JMkvpropedit {
         btnClearFiles.setContentAreaFilled(false);
         btnClearFiles.setFocusPainted(false);
         btnClearFiles.setOpaque(false);
+        btnClearFiles.setToolTipText("Clear file list");
         pnlListToolbar.add(btnClearFiles);
 
         JPanel pnlGeneral = new JPanel();
@@ -589,7 +614,7 @@ public class JMkvpropedit {
         txtNumbPadGeneral.setColumns(10);
         pnlNumbControlsGeneral.add(txtNumbPadGeneral);
 
-        lblNumbExplainGeneral = new JLabel("      To use it, add {num} to the title (e.g. \"My Title {num}\")");
+        lblNumbExplainGeneral = new JLabel("      To use it, add {num} to the title (e.g. \"My Title {num}\"). Use {file_name} to use the file name as the title.");
         lblNumbExplainGeneral.setEnabled(false);
         GridBagConstraints gbc_lblNumbExplainGeneral = new GridBagConstraints();
         gbc_lblNumbExplainGeneral.insets = new Insets(0, 0, 10, 0);
@@ -755,60 +780,6 @@ public class JMkvpropedit {
         gbc_txtExtraCmdGeneral.gridy = 7;
         pnlGeneral.add(txtExtraCmdGeneral, gbc_txtExtraCmdGeneral);
         txtExtraCmdGeneral.setColumns(10);
-
-        Component verticalGlue = Box.createVerticalGlue();
-        GridBagConstraints gbc_verticalGlue = new GridBagConstraints();
-        gbc_verticalGlue.insets = new Insets(0, 0, 20, 0);
-        gbc_verticalGlue.gridx = 1;
-        gbc_verticalGlue.gridy = 8;
-        pnlGeneral.add(verticalGlue, gbc_verticalGlue);
-
-        JLabel lblMkvPropExe = new JLabel("Mkvpropedit executable:");
-        GridBagConstraints gbc_lblMkvPropExe = new GridBagConstraints();
-        gbc_lblMkvPropExe.anchor = GridBagConstraints.WEST;
-        gbc_lblMkvPropExe.insets = new Insets(0, 0, 5, 5);
-        gbc_lblMkvPropExe.gridx = 0;
-        gbc_lblMkvPropExe.gridy = 9;
-        pnlGeneral.add(lblMkvPropExe, gbc_lblMkvPropExe);
-
-        txtMkvPropExe = new JTextField("mkvpropedit");
-        txtMkvPropExe.setEditable(false);
-        GridBagConstraints gbc_txtMkvPropExe = new GridBagConstraints();
-        gbc_txtMkvPropExe.insets = new Insets(0, 0, 5, 0);
-        gbc_txtMkvPropExe.fill = GridBagConstraints.HORIZONTAL;
-        gbc_txtMkvPropExe.gridx = 1;
-        gbc_txtMkvPropExe.gridy = 9;
-        pnlGeneral.add(txtMkvPropExe, gbc_txtMkvPropExe);
-        txtMkvPropExe.setColumns(10);
-
-        JPanel pnlMkvPropExeControls = new JPanel();
-        GridBagConstraints gbc_pnlMkvPropExeControls = new GridBagConstraints();
-        gbc_pnlMkvPropExeControls.fill = GridBagConstraints.HORIZONTAL;
-        gbc_pnlMkvPropExeControls.gridx = 1;
-        gbc_pnlMkvPropExeControls.gridy = 10;
-        pnlGeneral.add(pnlMkvPropExeControls, gbc_pnlMkvPropExeControls);
-        GridBagLayout gbl_pnlMkvPropExeControls = new GridBagLayout();
-        gbl_pnlMkvPropExeControls.columnWidths = new int[]{0, 0, 0};
-        gbl_pnlMkvPropExeControls.rowHeights = new int[]{0, 0};
-        gbl_pnlMkvPropExeControls.columnWeights = new double[]{1.0, 0.0, Double.MIN_VALUE};
-        gbl_pnlMkvPropExeControls.rowWeights = new double[]{0.0, Double.MIN_VALUE};
-        pnlMkvPropExeControls.setLayout(gbl_pnlMkvPropExeControls);
-
-        chbMkvPropExeDef = new JCheckBox("Use default");
-        chbMkvPropExeDef.setSelected(true);
-        chbMkvPropExeDef.setEnabled(false);
-        GridBagConstraints gbc_chckbxUseDefault = new GridBagConstraints();
-        gbc_chckbxUseDefault.anchor = GridBagConstraints.WEST;
-        gbc_chckbxUseDefault.insets = new Insets(0, 0, 0, 5);
-        gbc_chckbxUseDefault.gridx = 0;
-        gbc_chckbxUseDefault.gridy = 0;
-        pnlMkvPropExeControls.add(chbMkvPropExeDef, gbc_chckbxUseDefault);
-
-        JButton btnBrowseMkvPropExe = new JButton("Browse...");
-        GridBagConstraints gbc_btnBrowseMkvPropExe = new GridBagConstraints();
-        gbc_btnBrowseMkvPropExe.gridx = 1;
-        gbc_btnBrowseMkvPropExe.gridy = 0;
-        pnlMkvPropExeControls.add(btnBrowseMkvPropExe, gbc_btnBrowseMkvPropExe);
 
         JPanel pnlVideo = new JPanel();
         pnlVideo.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -1478,6 +1449,65 @@ public class JMkvpropedit {
         gbc_btnAttachDeleteCancel.gridy = 0;
         pnlAttachDeleteControlsBottom.add(btnAttachDeleteCancel, gbc_btnAttachDeleteCancel);
 
+        pnlOptions = new JPanel();
+        pnlOptions.setBorder(new EmptyBorder(10, 10, 10, 10));
+        pnlTabs.addTab("Options", null, pnlOptions, null);
+        GridBagLayout gbl_pnlOptions = new GridBagLayout();
+        gbl_pnlOptions.columnWidths = new int[] {0, 0, 0};
+        gbl_pnlOptions.rowHeights = new int[]{0, 0, 0, 0};
+        gbl_pnlOptions.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
+        gbl_pnlOptions.rowWeights = new double[]{0.0, 0.0, 1.0, Double.MIN_VALUE};
+        pnlOptions.setLayout(gbl_pnlOptions);
+
+        JLabel lblMkvPropExe = new JLabel("Mkvpropedit executable:");
+        lblMkvPropExe.setHorizontalAlignment(SwingConstants.CENTER);
+        GridBagConstraints gbc_label = new GridBagConstraints();
+        gbc_label.anchor = GridBagConstraints.WEST;
+        gbc_label.insets = new Insets(0, 0, 5, 5);
+        gbc_label.gridx = 0;
+        gbc_label.gridy = 0;
+        pnlOptions.add(lblMkvPropExe, gbc_label);
+
+        txtMkvPropExe = new JTextField("mkvpropedit");
+        txtMkvPropExe.setEditable(false);
+        txtMkvPropExe.setColumns(10);
+        GridBagConstraints gbc_textField = new GridBagConstraints();
+        gbc_textField.insets = new Insets(0, 0, 5, 0);
+        gbc_textField.fill = GridBagConstraints.HORIZONTAL;
+        gbc_textField.gridx = 1;
+        gbc_textField.gridy = 0;
+        pnlOptions.add(txtMkvPropExe, gbc_textField);
+
+        JPanel pnlMkvPropExeControls = new JPanel();
+        GridBagConstraints gbc_panel = new GridBagConstraints();
+        gbc_panel.insets = new Insets(0, 0, 5, 0);
+        gbc_panel.fill = GridBagConstraints.BOTH;
+        gbc_panel.gridx = 1;
+        gbc_panel.gridy = 1;
+        pnlOptions.add(pnlMkvPropExeControls, gbc_panel);
+        GridBagLayout gbl_panel = new GridBagLayout();
+        gbl_panel.columnWidths = new int[]{0, 0, 0};
+        gbl_panel.rowHeights = new int[]{0, 0};
+        gbl_panel.columnWeights = new double[]{1.0, 0.0, Double.MIN_VALUE};
+        gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+        pnlMkvPropExeControls.setLayout(gbl_panel);
+
+        chbMkvPropExeDef = new JCheckBox("Use default");
+        chbMkvPropExeDef.setSelected(true);
+        chbMkvPropExeDef.setEnabled(false);
+        GridBagConstraints gbc_checkBox = new GridBagConstraints();
+        gbc_checkBox.anchor = GridBagConstraints.WEST;
+        gbc_checkBox.insets = new Insets(0, 0, 0, 5);
+        gbc_checkBox.gridx = 0;
+        gbc_checkBox.gridy = 0;
+        pnlMkvPropExeControls.add(chbMkvPropExeDef, gbc_checkBox);
+
+        JButton btnBrowseMkvPropExe = new JButton("Browse...");
+        GridBagConstraints gbc_button = new GridBagConstraints();
+        gbc_button.gridx = 1;
+        gbc_button.gridy = 0;
+        pnlMkvPropExeControls.add(btnBrowseMkvPropExe, gbc_button);
+
         JPanel pnlOutput = new JPanel();
         pnlOutput.setBorder(new EmptyBorder(10, 10, 10, 10));
         pnlTabs.addTab("Output", null, pnlOutput, null);
@@ -1618,6 +1648,24 @@ public class JMkvpropedit {
                             } catch (IOException e1) {
                             }
                     }
+                }
+
+            }
+        });
+
+        btnAddFolder.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                File folder = null;
+
+                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                chooser.setDialogTitle("Select folder with Matroska files to edit");
+                chooser.setAcceptAllFileFilterUsed(false);
+
+                int open = chooser.showOpenDialog(frmJMkvpropedit);
+
+                if (open == JFileChooser.APPROVE_OPTION) {
+                    folder = chooser.getSelectedFile();
+                    addMkvFilesFromFolder(folder);
                 }
 
             }
@@ -2944,7 +2992,7 @@ public class JMkvpropedit {
             txtNumbPadVideo[nVideo].setColumns(10);
             pnlNumbControlsVideo.add(txtNumbPadVideo[nVideo]);
 
-            lblNumbExplainVideo[nVideo] = new JLabel("      To use it, add {num} to the name (e.g. \"My Video {num}\")");
+            lblNumbExplainVideo[nVideo] = new JLabel("      To use it, add {num} to the name (e.g. \"My Video {num}\"). Use {file_name} to use the file name as the name.");
             lblNumbExplainVideo[nVideo].setEnabled(false);
             GridBagConstraints gbc_lblNumbExplainVideo = new GridBagConstraints();
             gbc_lblNumbExplainVideo.insets = new Insets(0, 0, 10, 0);
@@ -3295,7 +3343,7 @@ public class JMkvpropedit {
             txtNumbPadAudio[nAudio].setColumns(10);
             pnlNumbControlsAudio.add(txtNumbPadAudio[nAudio]);
 
-            lblNumbExplainAudio[nAudio] = new JLabel("      To use it, add {num} to the name (e.g. \"My Audio {num}\")");
+            lblNumbExplainAudio[nAudio] = new JLabel("      To use it, add {num} to the name (e.g. \"My Audio {num}\"). Use {file_name} to use the file name as the name.");
             lblNumbExplainAudio[nAudio].setEnabled(false);
             GridBagConstraints gbc_lblNumbExplainAudio = new GridBagConstraints();
             gbc_lblNumbExplainAudio.insets = new Insets(0, 0, 10, 0);
@@ -3646,7 +3694,7 @@ public class JMkvpropedit {
             txtNumbPadSubtitle[nSubtitle].setColumns(10);
             pnlNumbControlsSubtitle.add(txtNumbPadSubtitle[nSubtitle]);
 
-            lblNumbExplainSubtitle[nSubtitle] = new JLabel("      To use it, add {num} to the name (e.g. \"My Subtitle {num}\")");
+            lblNumbExplainSubtitle[nSubtitle] = new JLabel("      To use it, add {num} to the name (e.g. \"My Subtitle {num}\"). Use {file_name} to use the file name as the name.");
             lblNumbExplainSubtitle[nSubtitle].setEnabled(false);
             GridBagConstraints gbc_lblNumbExplainSubtitle = new GridBagConstraints();
             gbc_lblNumbExplainSubtitle.insets = new Insets(0, 0, 10, 0);
@@ -3905,12 +3953,12 @@ public class JMkvpropedit {
                 switch (cbChapters.getSelectedIndex()) {
                     case 0:
                         cmdLineGeneral[i] += " --chapters \"\"";
-                        cmdLineGeneralOpt[i] += " --chapters #EMPTY#";
+                        cmdLineGeneralOpt[i] += " --chapters ''";
                         break;
                     case 1:
                         if (txtChapters.getText().trim().isEmpty()) {
                             cmdLineGeneral[i] += " --chapters \"\"";
-                            cmdLineGeneralOpt[i] += " --chapters #EMPTY#";
+                            cmdLineGeneralOpt[i] += " --chapters ''";
                         } else {
                             if (Utils.isWindows()) {
                                 cmdLineGeneral[i] += " --chapters \"" + txtChapters.getText() + "\"";
@@ -4062,8 +4110,8 @@ public class JMkvpropedit {
                     numStartVideo[i]++;
                 }
 
-                tmpText = tmpText.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(i)));
-                tmpText2 = tmpText2.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(i)));
+                tmpText = tmpText.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(j)));
+                tmpText2 = tmpText2.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(j)));
 
                 cmdLineVideo[j] += tmpText;
                 cmdLineVideoOpt[j] += tmpText2;
@@ -4168,8 +4216,8 @@ public class JMkvpropedit {
                     numStartAudio[i]++;
                 }
 
-                tmpText = tmpText.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(i)));
-                tmpText2 = tmpText2.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(i)));
+                tmpText = tmpText.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(j)));
+                tmpText2 = tmpText2.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(j)));
 
                 cmdLineAudio[j] += tmpText;
                 cmdLineAudioOpt[j] += tmpText2;
@@ -4274,8 +4322,8 @@ public class JMkvpropedit {
                     numStartSubtitle[i]++;
                 }
 
-                tmpText = tmpText.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(i)));
-                tmpText2 = tmpText2.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(i)));
+                tmpText = tmpText.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(j)));
+                tmpText2 = tmpText2.replace("{file_name}", Utils.getFileNameWithoutExt((String) modelFiles.get(j)));
 
                 cmdLineSubtitle[j] += tmpText;
                 cmdLineSubtitleOpt[j] += tmpText2;
@@ -4349,7 +4397,7 @@ public class JMkvpropedit {
             }
 
             if (type.equals(rbAttachReplaceName.getText())) {
-                cmdLineAttachmentsReplace += " --replace-attachment \"name:" + Utils.escapeColons(orig)
+                cmdLineAttachmentsReplace += " --replace-attachment \"name:" + orig
                         + ":" + replace + "\"";
                 cmdLineAttachmentsReplaceOpt += " --replace-attachment \"name:" + Utils.escapeName(orig)
                         + ":" + Utils.escapeName(replace) + "\"";
@@ -4357,7 +4405,7 @@ public class JMkvpropedit {
                 cmdLineAttachmentsReplace += " --replace-attachment \"" + orig    + ":" + replace + "\"";
                 cmdLineAttachmentsReplaceOpt += " --replace-attachment \"" + orig + ":" + Utils.escapeName(replace) + "\"";
             } else {
-                cmdLineAttachmentsReplace += " --replace-attachment \"mime-type:" + Utils.escapeColons(orig)
+                cmdLineAttachmentsReplace += " --replace-attachment \"mime-type:" + orig
                         + ":" + replace + "\"";
                 cmdLineAttachmentsReplaceOpt += " --replace-attachment \"mime-type:" + Utils.escapeName(orig)
                         + ":" + Utils.escapeName(replace) + "\"";
@@ -4380,7 +4428,7 @@ public class JMkvpropedit {
                 cmdLineAttachmentsDelete += " --delete-attachment \"" + value + "\"";
                 cmdLineAttachmentsDeleteOpt += " --delete-attachment \"" + value + "\"";
             } else {
-                cmdLineAttachmentsDelete += " --delete-attachment \"mime-type:" + Utils.escapeColons(value) + "\"";
+                cmdLineAttachmentsDelete += " --delete-attachment \"mime-type:" + value + "\"";
                 cmdLineAttachmentsDeleteOpt += " --delete-attachment \"mime-type:" + Utils.escapeName(value) + "\"";
             }
         }
@@ -4434,22 +4482,31 @@ public class JMkvpropedit {
 
                 for (int i = 0; i < cmdLineBatch.size(); i++) {
                     try {
-                        File optFile = new File("options.txt");
+                        File optFile = new File("options.json");
                         PrintWriter optFilePW = new PrintWriter(optFile, "UTF-8");
                         String[] optFileContents = Commandline.translateCommandline(cmdLineBatchOpt.get(i));
+                        int optFileMaxLines = optFileContents.length-1;
 
                         if (!optFile.exists()) {
                             optFile.createNewFile();
                         }
 
+                        optFilePW.println("[");
+                        int curLine = 0;
                         for (String content:optFileContents) {
-                            optFilePW.println(content);
+                            content = Utils.fixEscapedQuotes(content);
+
+                            optFilePW.print("  \"" + content + "\"");
+                            if (curLine != optFileMaxLines) optFilePW.print(",");
+                            optFilePW.println();
+                            curLine++;
                         }
+                        optFilePW.println("]");
 
                         optFilePW.flush();
                         optFilePW.close();
 
-                        pb.command(txtMkvPropExe.getText(), "@options.txt");
+                        pb.command(txtMkvPropExe.getText(), "@options.json");
                         pb.redirectErrorStream(true);
 
                         txtOutput.append("File: " + modelFiles.get(i) + "\n");
